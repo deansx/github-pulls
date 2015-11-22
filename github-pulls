@@ -1,0 +1,92 @@
+#!/usr/bin/python3
+"""Examines a project's GitHub repo and attempts to identify pull
+requests associated with fixing defects.  The SHA-1's for each of the 
+commits that were identified as addressing a defect are output in the
+following forms: CSV, JSON, txt
+
+Usage:
+    github-pulls [-h] repo_owner repo_name
+
+"repo_owner" (ex: GripQA") and "repo_name" (ex: "client-tools") are used
+to form the base URL for accessing the repo's GitHub information. Both
+arguments are required.
+
+An optional configuration file, in the current working directory, named
+'github-pulls.cfg' provides authentication information for the GitHub access.
+If not specified, the program attempts to access GitHub without authentication.
+This may cause issues both in terms of access permissions and GitHub's rate
+limitation policy.
+
+
+Running the program produces the following output files:
+    <repo_name>_pulls.csv
+    <repo_name>_pulls.json
+    <repo_name>_pulls.txt
+
+
+Copyright 2015 Grip QA
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+"""
+
+__author__ = "Dean Stevens"
+__copyright__ = "Copyright 2015, Grip QA"
+__license__ = "Apache License, Version 2.0"
+__status__ = "Prototype"
+__version__ = "0.0.1"
+
+
+import sys
+import argparse
+
+from github_pulls import github_pulls
+
+if __name__ == '__main__':
+
+    # argparse lets us provide both a default value and help text
+    owner_help = "Owner of the GitHub repo. Ex: 'GripQA'"
+    repo_help = "Name of the GitHub repo. Ex: 'client-tools'"
+    parser = argparse.ArgumentParser(
+                      description=__doc__
+                     ,formatter_class=argparse.RawDescriptionHelpFormatter
+                     )
+    parser.add_argument("repo_owner"
+                        ,nargs=1
+                        ,type=str
+                        ,help=owner_help
+                        )
+    parser.add_argument("repo_name"
+                        ,nargs=1
+                        ,type=str
+                        ,help=repo_help
+                        )
+    
+    parsed_args = parser.parse_args()
+    repo_owner = parsed_args.repo_owner[0]
+    repo_name = parsed_args.repo_name[0]
+    print("Repo Owner is: {}".format(repo_owner))
+    print("Repo Name is:  {}".format(repo_name))
+    if github_pulls.is_verbose():
+         fstr = "Processing repo:\n    {0}/{1}\n"
+         sys.stdout.write(fstr.format(repo_owner,repo_name))
+
+    auth_data = github_pulls.get_auth("./github_pulls.cfg")
+    
+    github_pulls.analyze_pulls( repo_owner
+    			       ,repo_name
+			       ,github_pulls.get_params()
+			       ,auth_data)
+# Local Variables:
+# mode: python
+# End:
